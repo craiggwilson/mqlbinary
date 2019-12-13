@@ -12,10 +12,10 @@ stage:
 ;
 
 stage_limit:
-    TYPE_DECIMAL128 DOLLAR L I M I T NUL_BYTE decimal128
-|   TYPE_DOUBLE DOLLAR L I M I T NUL_BYTE double
-|   TYPE_INT32 DOLLAR L I M I T NUL_BYTE int32
-|   TYPE_INT64 DOLLAR L I M I T NUL_BYTE int64
+    {{named_field_decimal128 "$limit"}}
+|   {{named_field_double "$limit"}}
+|   {{named_field_int32 "$limit"}}
+|   {{named_field_int64 "$limit"}}
 ;
 
 stage_match:
@@ -23,10 +23,10 @@ stage_match:
 ;
 
 stage_skip:
-    TYPE_DECIMAL128 DOLLAR S K I P NUL_BYTE decimal128
-|   TYPE_DOUBLE DOLLAR S K I P NUL_BYTE double
-|   TYPE_INT32 DOLLAR S K I P NUL_BYTE int32
-|   TYPE_INT64 DOLLAR S K I P NUL_BYTE int64
+    {{named_field_decimal128 "$skip"}}
+|   {{named_field_double "$skip"}}
+|   {{named_field_int32 "$skip"}}
+|   {{named_field_int64 "$skip"}}
 ;
 
 // match expressions
@@ -38,13 +38,13 @@ match_expr:
 match_eq_no_op: field_element;
 match_multi_op:
     TYPE_DOCUMENT field_name int32 (
-        (TYPE_DECIMAL128 DOLLAR E Q NUL_BYTE decimal128 | TYPE_DOUBLE DOLLAR E Q NUL_BYTE double | TYPE_INT32 DOLLAR E Q NUL_BYTE int32 | TYPE_INT64 DOLLAR E Q NUL_BYTE int64)
-    |   (TYPE_DECIMAL128 DOLLAR G T NUL_BYTE decimal128 | TYPE_DOUBLE DOLLAR G T NUL_BYTE double | TYPE_INT32 DOLLAR G T NUL_BYTE int32 | TYPE_INT64 DOLLAR G T NUL_BYTE int64)
-    |   (TYPE_DECIMAL128 DOLLAR G T E NUL_BYTE decimal128 | TYPE_DOUBLE DOLLAR G T E NUL_BYTE double | TYPE_INT32 DOLLAR G T E NUL_BYTE int32 | TYPE_INT64 DOLLAR G T E NUL_BYTE int64)
-    |   (TYPE_DECIMAL128 DOLLAR L T NUL_BYTE decimal128 | TYPE_DOUBLE DOLLAR L T NUL_BYTE double | TYPE_INT32 DOLLAR L T NUL_BYTE int32 | TYPE_INT64 DOLLAR L T NUL_BYTE int64)
-    |   (TYPE_DECIMAL128 DOLLAR L T E NUL_BYTE decimal128 | TYPE_DOUBLE DOLLAR L T E NUL_BYTE double | TYPE_INT32 DOLLAR L T E NUL_BYTE int32 | TYPE_INT64 DOLLAR L T E NUL_BYTE int64)
-    |   (TYPE_DECIMAL128 DOLLAR N E NUL_BYTE decimal128 | TYPE_DOUBLE DOLLAR N E NUL_BYTE double | TYPE_INT32 DOLLAR N E NUL_BYTE int32 | TYPE_INT64 DOLLAR N E NUL_BYTE int64)
-    |   (TYPE_DECIMAL128 DOLLAR N O T NUL_BYTE decimal128 | TYPE_DOUBLE DOLLAR N O T NUL_BYTE double | TYPE_INT32 DOLLAR N O T NUL_BYTE int32 | TYPE_INT64 DOLLAR N O T NUL_BYTE int64)
+        {{named_field_any "$eq"}}
+    |   {{named_field_any "$gt"}}
+    |   {{named_field_any "$gte"}}
+    |   {{named_field_any "$lt"}}
+    |   {{named_field_any "$lte"}}
+    |   {{named_field_any "$ne"}}
+    |   {{named_field_any "$not"}}
     )*
     NUL_BYTE
 ;
