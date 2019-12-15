@@ -1,4 +1,4 @@
-package internal
+package bsongen
 
 import (
 	"bytes"
@@ -8,10 +8,12 @@ import (
 	"text/template"
 )
 
-// Generate generates the template.
-func Generate(input string, lang Language) (string, error) {
-	g := &Generator{lang}
-	return g.Generate(input)
+type Language interface {
+	Length() string
+}
+
+func NewBSONGenerator(lang Language) *BSONGenerator {
+	return &BSONGenerator{lang}
 }
 
 var typeNames = []string{
@@ -19,14 +21,15 @@ var typeNames = []string{
 	"double",
 	"int32",
 	"int64",
+	"string",
 }
 
-type Generator struct {
+type BSONGenerator struct {
 	lang Language
 }
 
-func (g *Generator) Generate(input string) (string, error) {
-	tmpl, err := template.New("mql.g4.tmpl").Funcs(g.makeFuncMap()).Parse(input)
+func (g *BSONGenerator) Generate(input string) (string, error) {
+	tmpl, err := template.New("mql").Funcs(g.makeFuncMap()).Parse(input)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -42,16 +45,16 @@ func (g *Generator) Generate(input string) (string, error) {
 }
 
 // FUNCTIONS
-func (g *Generator) makeFuncMap() template.FuncMap {
+func (g *BSONGenerator) makeFuncMap() template.FuncMap {
 	funcMap := template.FuncMap{
-		"any_field_any":        g.anyFieldAny,
-		"any_start_document":   g.anyStartDocument,
-		"definitions":          g.definitions,
-		"end_document":         g.endDocument,
-		"length":               g.lang.Length,
-		"named_field_any":      g.namedFieldAny,
-		"named_field_document": g.namedFieldDocument,
-		"named_start_document": g.namedStartDocument,
+		"definitions":            g.definitions,
+		"end_document":           g.endDocument,
+		"field":                  func() string { return "field" },
+		"length":                 g.lang.Length,
+		"named_field_any":        g.namedFieldAny,
+		"named_field":            g.namedField,
+		"start_document":         g.startDocument,
+		"start_document_no_type": g.startDocumentNoType,
 	}
 
 	for _, typeName := range typeNames {
@@ -64,23 +67,34 @@ func (g *Generator) makeFuncMap() template.FuncMap {
 	return funcMap
 }
 
-func (Generator) anyFieldAny() string {
-	return "any_field_any"
-}
-
-func (g *Generator) anyStartDocument() string {
+func (g *BSONGenerator) anyStartDocument() string {
 	return "TYPE_DOCUMENT name=cstring " + g.lang.Length()
 }
 
-func (Generator) endDocument() string {
+func (BSONGenerator) endDocument() string {
 	return "NUL_BYTE"
 }
 
-func (g *Generator) namedField(name string, typeName string) string {
+func (g *BSONGenerator) namedField(name string, typeNames ...string) string {
+	switch len(typeNames) {
+	case 0:
+		return g.namedFieldAny(name)
+	case 1:
+		return g.namedFieldWithType(name, typeNames[0])
+	default:
+		parts := make([]string, 0, len(typeNames))
+		for i := 0; i < len(typeNames); i++ {
+			parts = append(parts, g.namedFieldWithType(name, typeNames[i]))
+		}
+		return strings.Join(parts, " | ")
+	}
+}
+
+func (g *BSONGenerator) namedFieldWithType(name string, typeName string) string {
 	return fmt.Sprintf("TYPE_%s %s %s", strings.ToUpper(typeName), g.convertNameToMarkers(name), typeName)
 }
 
-func (g *Generator) namedFieldAny(name string) string {
+func (g *BSONGenerator) namedFieldAny(name string) string {
 	result := "("
 	for i, typeName := range typeNames {
 		if i != 0 {
@@ -93,17 +107,21 @@ func (g *Generator) namedFieldAny(name string) string {
 	return result
 }
 
-func (g *Generator) namedFieldDocument(name string) string {
-	f := g.namedField(name, "document")
-	return f + " " + g.lang.Length()
+func (g *BSONGenerator) startDocumentNoType() string {
+	return g.lang.Length()
 }
 
-func (g *Generator) namedStartDocument(name string) string {
-	return fmt.Sprintf("TYPE_DOCUMENT %s %s", g.convertNameToMarkers(name), g.lang.Length())
+func (g *BSONGenerator) startDocument(names ...string) string {
+	switch len(names) {
+	case 0:
+		return "TYPE_DOCUMENT name=cstring " + g.lang.Length()
+	default:
+		return fmt.Sprintf("TYPE_DOCUMENT %s %s", g.convertNameToMarkers(names[0]), g.lang.Length())
+	}
 }
 
 // HELPERS
-func (Generator) convertNameToMarkers(name string) string {
+func (BSONGenerator) convertNameToMarkers(name string) string {
 	parts := make([]string, len(name)+1)
 	parts[len(name)] = "NUL_BYTE"
 
@@ -121,20 +139,22 @@ func (Generator) convertNameToMarkers(name string) string {
 	return strings.Join(parts, " ")
 }
 
-func (Generator) definitions() string {
+func (BSONGenerator) definitions() string {
 	return `
 // fields
-any_field_any:
-	any_field_decimal128
-|   any_field_double
-|   any_field_int32
-|   any_field_int64
+field:
+	field_decimal128
+|   field_double
+|   field_int32
+|   field_int64
+|	field_string
 ;
 
-any_field_decimal128: TYPE_DECIMAL128 name=cstring value=decimal128;
-any_field_double: TYPE_DOUBLE name=cstring value=double;
-any_field_int32: TYPE_INT32 name=cstring value=int32;
-any_field_int64: TYPE_INT64 name=cstring value=int64;
+field_decimal128: TYPE_DECIMAL128 name=cstring value=decimal128;
+field_double: TYPE_DOUBLE name=cstring value=double;
+field_int32: TYPE_INT32 name=cstring value=int32;
+field_int64: TYPE_INT64 name=cstring value=int64;
+field_string: TYPE_STRING name=cstring value=string;
 
 // values
 cstring: 
@@ -156,6 +176,9 @@ int32:
 int64: 
     (non_null_byte | NUL_BYTE) (non_null_byte | NUL_BYTE) (non_null_byte | NUL_BYTE) (non_null_byte | NUL_BYTE) 
     (non_null_byte | NUL_BYTE) (non_null_byte | NUL_BYTE) (non_null_byte | NUL_BYTE) (non_null_byte | NUL_BYTE)
+;
+string:
+	int32 cstring
 ;
 
 // general

@@ -1,6 +1,6 @@
 grammar mql;
 
-start: int32 (TYPE_DOCUMENT name=cstring int32 stage NUL_BYTE)* NUL_BYTE;
+start: int32 (TYPE_DOCUMENT name=cstring int32 stage NUL_BYTE)* NUL_BYTE EOF;
 
 stage:
     stage_limit
@@ -9,19 +9,13 @@ stage:
 ;
 
 stage_limit:
-    TYPE_DECIMAL128 DOLLAR L I M I T NUL_BYTE decimal128
-|   TYPE_DOUBLE DOLLAR L I M I T NUL_BYTE double
-|   TYPE_INT32 DOLLAR L I M I T NUL_BYTE int32
-|   TYPE_INT64 DOLLAR L I M I T NUL_BYTE int64
+    TYPE_DECIMAL128 DOLLAR L I M I T NUL_BYTE decimal128 | TYPE_DOUBLE DOLLAR L I M I T NUL_BYTE double | TYPE_INT32 DOLLAR L I M I T NUL_BYTE int32 | TYPE_INT64 DOLLAR L I M I T NUL_BYTE int64
 ;
 
 stage_match: TYPE_DOCUMENT DOLLAR M A T C H NUL_BYTE int32 match_expr* NUL_BYTE;
 
 stage_skip:
-    TYPE_DECIMAL128 DOLLAR S K I P NUL_BYTE decimal128
-|   TYPE_DOUBLE DOLLAR S K I P NUL_BYTE double
-|   TYPE_INT32 DOLLAR S K I P NUL_BYTE int32
-|   TYPE_INT64 DOLLAR S K I P NUL_BYTE int64
+    TYPE_DECIMAL128 DOLLAR S K I P NUL_BYTE decimal128 | TYPE_DOUBLE DOLLAR S K I P NUL_BYTE double | TYPE_INT32 DOLLAR S K I P NUL_BYTE int32 | TYPE_INT64 DOLLAR S K I P NUL_BYTE int64
 ;
 
 match_expr:
@@ -29,34 +23,36 @@ match_expr:
 |   match_expr_multi_op
 ;
 
-match_expr_eq_no_op: any_field_any;
+match_expr_eq_no_op: field;
 
 match_expr_multi_op:
     TYPE_DOCUMENT name=cstring int32 (
-        (TYPE_DECIMAL128 DOLLAR E Q NUL_BYTE decimal128 | TYPE_DOUBLE DOLLAR E Q NUL_BYTE double | TYPE_INT32 DOLLAR E Q NUL_BYTE int32 | TYPE_INT64 DOLLAR E Q NUL_BYTE int64)
-    |   (TYPE_DECIMAL128 DOLLAR G T NUL_BYTE decimal128 | TYPE_DOUBLE DOLLAR G T NUL_BYTE double | TYPE_INT32 DOLLAR G T NUL_BYTE int32 | TYPE_INT64 DOLLAR G T NUL_BYTE int64)
-    |   (TYPE_DECIMAL128 DOLLAR G T E NUL_BYTE decimal128 | TYPE_DOUBLE DOLLAR G T E NUL_BYTE double | TYPE_INT32 DOLLAR G T E NUL_BYTE int32 | TYPE_INT64 DOLLAR G T E NUL_BYTE int64)
-    |   (TYPE_DECIMAL128 DOLLAR L T NUL_BYTE decimal128 | TYPE_DOUBLE DOLLAR L T NUL_BYTE double | TYPE_INT32 DOLLAR L T NUL_BYTE int32 | TYPE_INT64 DOLLAR L T NUL_BYTE int64)
-    |   (TYPE_DECIMAL128 DOLLAR L T E NUL_BYTE decimal128 | TYPE_DOUBLE DOLLAR L T E NUL_BYTE double | TYPE_INT32 DOLLAR L T E NUL_BYTE int32 | TYPE_INT64 DOLLAR L T E NUL_BYTE int64)
-    |   (TYPE_DECIMAL128 DOLLAR N E NUL_BYTE decimal128 | TYPE_DOUBLE DOLLAR N E NUL_BYTE double | TYPE_INT32 DOLLAR N E NUL_BYTE int32 | TYPE_INT64 DOLLAR N E NUL_BYTE int64)
-    |   (TYPE_DECIMAL128 DOLLAR N O T NUL_BYTE decimal128 | TYPE_DOUBLE DOLLAR N O T NUL_BYTE double | TYPE_INT32 DOLLAR N O T NUL_BYTE int32 | TYPE_INT64 DOLLAR N O T NUL_BYTE int64)
+        (TYPE_DECIMAL128 DOLLAR E Q NUL_BYTE decimal128 | TYPE_DOUBLE DOLLAR E Q NUL_BYTE double | TYPE_INT32 DOLLAR E Q NUL_BYTE int32 | TYPE_INT64 DOLLAR E Q NUL_BYTE int64 | TYPE_STRING DOLLAR E Q NUL_BYTE string)
+    |   (TYPE_DECIMAL128 DOLLAR G T NUL_BYTE decimal128 | TYPE_DOUBLE DOLLAR G T NUL_BYTE double | TYPE_INT32 DOLLAR G T NUL_BYTE int32 | TYPE_INT64 DOLLAR G T NUL_BYTE int64 | TYPE_STRING DOLLAR G T NUL_BYTE string)
+    |   (TYPE_DECIMAL128 DOLLAR G T E NUL_BYTE decimal128 | TYPE_DOUBLE DOLLAR G T E NUL_BYTE double | TYPE_INT32 DOLLAR G T E NUL_BYTE int32 | TYPE_INT64 DOLLAR G T E NUL_BYTE int64 | TYPE_STRING DOLLAR G T E NUL_BYTE string)
+    |   (TYPE_DECIMAL128 DOLLAR L T NUL_BYTE decimal128 | TYPE_DOUBLE DOLLAR L T NUL_BYTE double | TYPE_INT32 DOLLAR L T NUL_BYTE int32 | TYPE_INT64 DOLLAR L T NUL_BYTE int64 | TYPE_STRING DOLLAR L T NUL_BYTE string)
+    |   (TYPE_DECIMAL128 DOLLAR L T E NUL_BYTE decimal128 | TYPE_DOUBLE DOLLAR L T E NUL_BYTE double | TYPE_INT32 DOLLAR L T E NUL_BYTE int32 | TYPE_INT64 DOLLAR L T E NUL_BYTE int64 | TYPE_STRING DOLLAR L T E NUL_BYTE string)
+    |   (TYPE_DECIMAL128 DOLLAR N E NUL_BYTE decimal128 | TYPE_DOUBLE DOLLAR N E NUL_BYTE double | TYPE_INT32 DOLLAR N E NUL_BYTE int32 | TYPE_INT64 DOLLAR N E NUL_BYTE int64 | TYPE_STRING DOLLAR N E NUL_BYTE string)
+    |   (TYPE_DECIMAL128 DOLLAR N O T NUL_BYTE decimal128 | TYPE_DOUBLE DOLLAR N O T NUL_BYTE double | TYPE_INT32 DOLLAR N O T NUL_BYTE int32 | TYPE_INT64 DOLLAR N O T NUL_BYTE int64 | TYPE_STRING DOLLAR N O T NUL_BYTE string)
     )*
     NUL_BYTE
 ;
 
 
 // fields
-any_field_any:
-	any_field_decimal128
-|   any_field_double
-|   any_field_int32
-|   any_field_int64
+field:
+	field_decimal128
+|   field_double
+|   field_int32
+|   field_int64
+|	field_string
 ;
 
-any_field_decimal128: TYPE_DECIMAL128 name=cstring value=decimal128;
-any_field_double: TYPE_DOUBLE name=cstring value=double;
-any_field_int32: TYPE_INT32 name=cstring value=int32;
-any_field_int64: TYPE_INT64 name=cstring value=int64;
+field_decimal128: TYPE_DECIMAL128 name=cstring value=decimal128;
+field_double: TYPE_DOUBLE name=cstring value=double;
+field_int32: TYPE_INT32 name=cstring value=int32;
+field_int64: TYPE_INT64 name=cstring value=int64;
+field_string: TYPE_STRING name=cstring value=string;
 
 // values
 cstring: 
@@ -78,6 +74,9 @@ int32:
 int64: 
     (non_null_byte | NUL_BYTE) (non_null_byte | NUL_BYTE) (non_null_byte | NUL_BYTE) (non_null_byte | NUL_BYTE) 
     (non_null_byte | NUL_BYTE) (non_null_byte | NUL_BYTE) (non_null_byte | NUL_BYTE) (non_null_byte | NUL_BYTE)
+;
+string:
+	int32 cstring
 ;
 
 // general

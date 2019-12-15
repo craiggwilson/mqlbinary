@@ -5,7 +5,8 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/craiggwilson/mqlbinary/internal"
+	"github.com/craiggwilson/mqlbinary/internal/bsongen"
+	"github.com/craiggwilson/mqlbinary/internal/lang"
 )
 
 func main() {
@@ -15,7 +16,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	output, err := internal.Generate(string(input), internal.JavaLanguage{})
+	generator := bsongen.NewBSONGenerator(lang.Java{})
+
+	output, err := generator.Generate(string(input))
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
