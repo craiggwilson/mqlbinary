@@ -1,7 +1,7 @@
 grammar mql;
 
 start:
-    int32 (TYPE_DOCUMENT field_name int32 stage NUL_BYTE)+ NUL_BYTE
+    int32 (TYPE_DOCUMENT name=cstring int32 stage NUL_BYTE)+ NUL_BYTE
 ;
 
 // stages
@@ -12,10 +12,10 @@ stage:
 ;
 
 stage_limit:
-    {{named_field_decimal128 "$limit"}}
-|   {{named_field_double "$limit"}}
-|   {{named_field_int32 "$limit"}}
-|   {{named_field_int64 "$limit"}}
+    TYPE_DECIMAL128 DOLLAR L I M I T NUL_BYTE decimal128
+|   TYPE_DOUBLE DOLLAR L I M I T NUL_BYTE double
+|   TYPE_INT32 DOLLAR L I M I T NUL_BYTE int32
+|   TYPE_INT64 DOLLAR L I M I T NUL_BYTE int64
 ;
 
 stage_match:
@@ -23,10 +23,10 @@ stage_match:
 ;
 
 stage_skip:
-    {{named_field_decimal128 "$skip"}}
-|   {{named_field_double "$skip"}}
-|   {{named_field_int32 "$skip"}}
-|   {{named_field_int64 "$skip"}}
+    TYPE_DECIMAL128 DOLLAR S K I P NUL_BYTE decimal128
+|   TYPE_DOUBLE DOLLAR S K I P NUL_BYTE double
+|   TYPE_INT32 DOLLAR S K I P NUL_BYTE int32
+|   TYPE_INT64 DOLLAR S K I P NUL_BYTE int64
 ;
 
 // match expressions
@@ -35,36 +35,36 @@ match_expr:
 |   match_multi_op
 ;
 
-match_eq_no_op: field_element;
+match_eq_no_op: any_field_any;
 match_multi_op:
-    TYPE_DOCUMENT field_name int32 (
-        {{named_field_any "$eq"}}
-    |   {{named_field_any "$gt"}}
-    |   {{named_field_any "$gte"}}
-    |   {{named_field_any "$lt"}}
-    |   {{named_field_any "$lte"}}
-    |   {{named_field_any "$ne"}}
-    |   {{named_field_any "$not"}}
+    TYPE_DOCUMENT name=cstring int32 (
+        (TYPE_DECIMAL128 DOLLAR E Q NUL_BYTE decimal128 | TYPE_DOUBLE DOLLAR E Q NUL_BYTE double | TYPE_INT32 DOLLAR E Q NUL_BYTE int32 | TYPE_INT64 DOLLAR E Q NUL_BYTE int64)
+    |   (TYPE_DECIMAL128 DOLLAR G T NUL_BYTE decimal128 | TYPE_DOUBLE DOLLAR G T NUL_BYTE double | TYPE_INT32 DOLLAR G T NUL_BYTE int32 | TYPE_INT64 DOLLAR G T NUL_BYTE int64)
+    |   (TYPE_DECIMAL128 DOLLAR G T E NUL_BYTE decimal128 | TYPE_DOUBLE DOLLAR G T E NUL_BYTE double | TYPE_INT32 DOLLAR G T E NUL_BYTE int32 | TYPE_INT64 DOLLAR G T E NUL_BYTE int64)
+    |   (TYPE_DECIMAL128 DOLLAR L T NUL_BYTE decimal128 | TYPE_DOUBLE DOLLAR L T NUL_BYTE double | TYPE_INT32 DOLLAR L T NUL_BYTE int32 | TYPE_INT64 DOLLAR L T NUL_BYTE int64)
+    |   (TYPE_DECIMAL128 DOLLAR L T E NUL_BYTE decimal128 | TYPE_DOUBLE DOLLAR L T E NUL_BYTE double | TYPE_INT32 DOLLAR L T E NUL_BYTE int32 | TYPE_INT64 DOLLAR L T E NUL_BYTE int64)
+    |   (TYPE_DECIMAL128 DOLLAR N E NUL_BYTE decimal128 | TYPE_DOUBLE DOLLAR N E NUL_BYTE double | TYPE_INT32 DOLLAR N E NUL_BYTE int32 | TYPE_INT64 DOLLAR N E NUL_BYTE int64)
+    |   (TYPE_DECIMAL128 DOLLAR N O T NUL_BYTE decimal128 | TYPE_DOUBLE DOLLAR N O T NUL_BYTE double | TYPE_INT32 DOLLAR N O T NUL_BYTE int32 | TYPE_INT64 DOLLAR N O T NUL_BYTE int64)
     )*
     NUL_BYTE
 ;
 
 // fields
-field_element:
-    field_element_decimal128
-|   field_element_double
-|   field_element_int32
-|   field_element_int64
+any_field_any:
+    any_field_decimal128
+|   any_field_double
+|   any_field_int32
+|   any_field_int64
 ;
 
-field_element_decimal128: TYPE_DECIMAL128 field_name decimal128;
-field_element_double: TYPE_DOUBLE field_name double;
-field_element_int32: TYPE_INT32 field_name int32;
-field_element_int64: TYPE_INT64 field_name int64;
+any_field_decimal128: TYPE_DECIMAL128 name=cstring value=decimal128;
+any_field_double: TYPE_DOUBLE name=cstring value=double;
+any_field_int32: TYPE_INT32 name=cstring value=int32;
+any_field_int64: TYPE_INT64 name=cstring value=int64;
 
-field_name: non_null_byte* NUL_BYTE;
 
 // values
+cstring: non_null_byte* NUL_BYTE;
 decimal128: 
     (non_null_byte | NUL_BYTE) (non_null_byte | NUL_BYTE) (non_null_byte | NUL_BYTE) (non_null_byte | NUL_BYTE) 
     (non_null_byte | NUL_BYTE) (non_null_byte | NUL_BYTE) (non_null_byte | NUL_BYTE) (non_null_byte | NUL_BYTE)
@@ -81,6 +81,9 @@ int32:
 int64: 
     (non_null_byte | NUL_BYTE) (non_null_byte | NUL_BYTE) (non_null_byte | NUL_BYTE) (non_null_byte | NUL_BYTE) 
     (non_null_byte | NUL_BYTE) (non_null_byte | NUL_BYTE) (non_null_byte | NUL_BYTE) (non_null_byte | NUL_BYTE)
+;
+string:
+
 ;
 
 // general

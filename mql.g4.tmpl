@@ -1,0 +1,47 @@
+grammar mql;
+
+start: {{length}} ({{any_start_document}} stage {{end_document}})* {{end_document}};
+
+stage:
+    stage_limit
+|   stage_match
+|   stage_skip
+;
+
+stage_limit:
+    {{named_field_decimal128 "$limit"}}
+|   {{named_field_double "$limit"}}
+|   {{named_field_int32 "$limit"}}
+|   {{named_field_int64 "$limit"}}
+;
+
+stage_match: {{named_start_document "$match"}} match_expr* {{end_document}};
+
+stage_skip:
+    {{named_field_decimal128 "$skip"}}
+|   {{named_field_double "$skip"}}
+|   {{named_field_int32 "$skip"}}
+|   {{named_field_int64 "$skip"}}
+;
+
+match_expr:
+    match_expr_eq_no_op
+|   match_expr_multi_op
+;
+
+match_expr_eq_no_op: {{any_field_any}};
+
+match_expr_multi_op:
+    {{any_start_document}} (
+        {{named_field_any "$eq"}}
+    |   {{named_field_any "$gt"}}
+    |   {{named_field_any "$gte"}}
+    |   {{named_field_any "$lt"}}
+    |   {{named_field_any "$lte"}}
+    |   {{named_field_any "$ne"}}
+    |   {{named_field_any "$not"}}
+    )*
+    {{end_document}}
+;
+
+{{definitions}}

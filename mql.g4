@@ -1,10 +1,7 @@
 grammar mql;
 
-start:
-    int32 (TYPE_DOCUMENT field_name int32 stage NUL_BYTE)+ NUL_BYTE
-;
+start: int32 (TYPE_DOCUMENT name=cstring int32 stage NUL_BYTE)* NUL_BYTE;
 
-// stages
 stage:
     stage_limit
 |   stage_match
@@ -18,9 +15,7 @@ stage_limit:
 |   TYPE_INT64 DOLLAR L I M I T NUL_BYTE int64
 ;
 
-stage_match:
-    TYPE_DOCUMENT DOLLAR M A T C H NUL_BYTE int32 match_expr* NUL_BYTE
-;
+stage_match: TYPE_DOCUMENT DOLLAR M A T C H NUL_BYTE int32 match_expr* NUL_BYTE;
 
 stage_skip:
     TYPE_DECIMAL128 DOLLAR S K I P NUL_BYTE decimal128
@@ -29,15 +24,15 @@ stage_skip:
 |   TYPE_INT64 DOLLAR S K I P NUL_BYTE int64
 ;
 
-// match expressions
 match_expr:
-    match_eq_no_op
-|   match_multi_op
+    match_expr_eq_no_op
+|   match_expr_multi_op
 ;
 
-match_eq_no_op: field_element;
-match_multi_op:
-    TYPE_DOCUMENT field_name int32 (
+match_expr_eq_no_op: any_field_any;
+
+match_expr_multi_op:
+    TYPE_DOCUMENT name=cstring int32 (
         (TYPE_DECIMAL128 DOLLAR E Q NUL_BYTE decimal128 | TYPE_DOUBLE DOLLAR E Q NUL_BYTE double | TYPE_INT32 DOLLAR E Q NUL_BYTE int32 | TYPE_INT64 DOLLAR E Q NUL_BYTE int64)
     |   (TYPE_DECIMAL128 DOLLAR G T NUL_BYTE decimal128 | TYPE_DOUBLE DOLLAR G T NUL_BYTE double | TYPE_INT32 DOLLAR G T NUL_BYTE int32 | TYPE_INT64 DOLLAR G T NUL_BYTE int64)
     |   (TYPE_DECIMAL128 DOLLAR G T E NUL_BYTE decimal128 | TYPE_DOUBLE DOLLAR G T E NUL_BYTE double | TYPE_INT32 DOLLAR G T E NUL_BYTE int32 | TYPE_INT64 DOLLAR G T E NUL_BYTE int64)
@@ -49,22 +44,24 @@ match_multi_op:
     NUL_BYTE
 ;
 
+
 // fields
-field_element:
-    field_element_decimal128
-|   field_element_double
-|   field_element_int32
-|   field_element_int64
+any_field_any:
+	any_field_decimal128
+|   any_field_double
+|   any_field_int32
+|   any_field_int64
 ;
 
-field_element_decimal128: TYPE_DECIMAL128 field_name decimal128;
-field_element_double: TYPE_DOUBLE field_name double;
-field_element_int32: TYPE_INT32 field_name int32;
-field_element_int64: TYPE_INT64 field_name int64;
-
-field_name: non_null_byte* NUL_BYTE;
+any_field_decimal128: TYPE_DECIMAL128 name=cstring value=decimal128;
+any_field_double: TYPE_DOUBLE name=cstring value=double;
+any_field_int32: TYPE_INT32 name=cstring value=int32;
+any_field_int64: TYPE_INT64 name=cstring value=int64;
 
 // values
+cstring: 
+	non_null_byte* NUL_BYTE
+;
 decimal128: 
     (non_null_byte | NUL_BYTE) (non_null_byte | NUL_BYTE) (non_null_byte | NUL_BYTE) (non_null_byte | NUL_BYTE) 
     (non_null_byte | NUL_BYTE) (non_null_byte | NUL_BYTE) (non_null_byte | NUL_BYTE) (non_null_byte | NUL_BYTE)
